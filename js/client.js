@@ -1,222 +1,202 @@
-// Edit me. Feel free to create additional .js files.
- 'use strict'
-
- document.addEventListener("DOMContentLoaded", function(event) {
-  //reference https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas
-  var DOMURL = window.URL || window.webkitURL || window;
-
-  //render original image
-  var imageLoad = document.getElementById("photo--upload");
+document.addEventListener('DOMContentLoaded', (event) => {
+  'use strict';
+  // ** event listener ** //
+  document.getElementById('photo-upload').addEventListener(
+    'change', handleImageUpload, false);
+});
 
 
-  var originalCanvas = document.getElementById('original');
-  var originalContext = originalCanvas.getContext('2d');
 
-  //canvas for getting OG image data and not show process on screen
-  var canvas = document.createElement('canvas');
-  var ctx = canvas.getContext('2d');
+// ** globals ** //
+const sourceImage = new Image();
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+const windowURL = window.URL || window.webkitURL || window;
 
-  var sourceImage = new Image();
-  //load the actual image
 
-      imageLoad.addEventListener('change', handleImage, false);
-      imageLoad.addEventListener('change', loadOriginalImage, false);
+// ** helpers ** //
 
-      //show OG image before mosaic
-      function loadOriginalImage(e) {
-          var reader = new FileReader();
-          reader.onload = function(event){
-            var img = new Image();
-            img.onload = function() {
-              originalCanvas.width = img.width;
-              originalCanvas.height = img.height;
-              originalContext.drawImage(img, 0, 0);
-            }
-            img.src = event.target.result;
-          }
-          reader.readAsDataURL(e.target.files[0]);
-      };
+function handleImageUpload(event) {
+  loadOriginalImage(event);
+  handleImage(event);
+}
 
-    //everything runs on change of input
-      function handleImage(e) {
-        var reader = new FileReader();
-        reader.onload = function(event){
-          sourceImage = new Image();
-          //once the image loads
-          sourceImage.onload = function() {
-            canvas.width = sourceImage.width;
-            canvas.height = sourceImage.height;
-            //run calls all worker funcitons
-            run(sourceImage);
-          }
-          sourceImage.src = event.target.result;
-        }
-        reader.readAsDataURL(e.target.files[0]);
-      };
-  //function to get image meta data, and coordinates associated with it.
-  function makeTile(imageData, x, y) {
-    this.hex = rgbToHex(imageData);
-    this.x = x * TILE_WIDTH;
-    this.y = y * TILE_HEIGHT;
+
+function loadOriginalImage(event) {
+  const originalCanvasElement = document.getElementById('original');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      originalCanvasElement.width = img.width;
+      originalCanvasElement.height = img.height;
+      originalCanvasElement.getContext('2d').drawImage(img, 0, 0);
+    };
+    img.src = e.target.result;
   };
+  reader.readAsDataURL(event.target.files[0]);
+  return true;
+}
 
-  function readImageData(sourceImage) {
-    //divide the image into 16x16px tiles
-    canvas.width = (sourceImage.width / TILE_WIDTH);
-    canvas.height = (sourceImage.height / TILE_HEIGHT);
-    //draw the image starting at x,y coordinates of 0, 0
-    ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
-    return ctx;
+function handleImage(event) {
+    const reader = new FileReader();
+    reader.onload = (e)=> {
+      const sourceImage = new Image();
+      // once the image loads
+      sourceImage.onload = () => {
+      canvas.width = sourceImage.width;
+      canvas.height = sourceImage.height;
+      // call all worker funcitons
+      drawMosiac(sourceImage);
+    };
+    sourceImage.src = e.target.result;
   };
+  reader.readAsDataURL(event.target.files[0]);
+}
 
-//getting initial data for tiles
-  function getTileData(sourceImage) {
-    var counter = 0
-    var tile = [];
-    //read original image data to be placed into tiles
-    var context = readImageData(sourceImage);
-
-    var numX = sourceImage.width / TILE_WIDTH;
-    var numY = sourceImage.height / TILE_HEIGHT;
-    //getImageData built in pixel data reader function from canvas
-    //returns the RGB
-    var data = context.getImageData(0, 0, numX, numY).data;
-    //for loop pushing the hex color into object typedArray
-    for(var row = 0; row < numY; row++) {
-      for(var col = 0; col < numX; col++) {
-        //make new tile instance
-        tile.push(new makeTile(data.subarray(counter * 4, counter * 4 + 3), col, row));
-        counter++
-      }
+function drawMosiac(image) {
+  const finalCanvas = document.getElementById('mosaic');
+  finalCanvas.width = image.width;
+  finalCanvas.height = image.height;
+  const hexArray = [];
+  const positions = [];
+  const allSvg = [];
+  // each chunk equalls 16x16px squares
+  const chunkSize = image.width / TILE_WIDTH; // jshint ignore:line
+  const tileData = getTileData(image);
+  //split tiles into 16x16 chunks
+  let chunk = tileData.splice(0, chunkSize);
+  // while chunks exist break it into arrays of data
+  while(chunk.length !== 0) {
+    for(let i = 0; i< chunk.length; i++){
+      // refactor into a generator
+      chunk.map((data) => {
+        //returns single svg
+        const hex = data.hex;
+        const posX = data.x;
+        const posY = data.y;
+        hexArray.push(hex);
+        positions.push({x: posX, y: posY});
+      });
     }
-    return tile;
-  };
-
-  function drawMos(image) {
-    var finalCanvas = document.getElementById('mosaic');
-    var finalCtx = finalCanvas.getContext('2d');
-
-    finalCanvas.width = image.width;
-    finalCanvas.height = image.height;
-
-    var chunkSize, chunk, tileData;
-    var hexArray = [];
-    var positions = [];
-    var allSvg = [];
-    var masterSvg = [];
-
-    //set it so each chunk equalls 16x16px squares
-    chunkSize = image.width / TILE_WIDTH;
-    tileData = getTileData(image);
-
-    //split tiles into 16x16 chunks
-    chunk = tileData.splice(0, chunkSize)
-
-    //while chunks exist break it into arrays of data
-    while(chunk.length !== 0) {
-      for(var i = 0; i< chunk.length; i++){
-        chunk.map(function(data) {
-          //returns single svg
-          var hex = data.hex;
-          var posX = data.x;
-          var posY = data.y;
-
-          hexArray.push(hex)
-          positions.push({x: posX, y: posY})
-        })
-      }
-      //re-allocate to next chunk
-      chunk = tileData.splice(0, chunkSize)
-    }
-
-    var indexCount = 0;
-    var i = 0;
-    function fetchNextColor() {
-      hexFetch(hexArray[indexCount])
-        .then(function(response){
-          return response.text();
-        })
-        .then(function(result){
-          console.log(result);
-          masterSvg.push({svg: result, x: positions[i].x, y: positions[i].y})
-          indexCount++;
-          i++;
-          if(indexCount >= hexArray.length) {
-            renderRows(masterSvg, finalCtx, finalCanvas);
-          } else {
-            fetchNextColor();
-          }
-        });
-    }
-
-    fetchNextColor();
-
-};
-
-
-  //render the rows, each thru the array or svg and (x.y) positions, and place onto screen.
-  function renderRows(arr, ctx, canvas) {
-    arr.forEach(function(data) {
-      renderTile(ctx, data.svg, {x: data.x, y: data.y})
-    });
-
+    // re-allocate to next chunk
+    chunk = tileData.splice(0, chunkSize);
   }
+  fetchNextColor(hexArray, positions, finalCanvas, 0, [], 0);
+}
 
-  function hexFetch(hex){
-      return fetch('/color/' + hex)
+// get initial data for tiles
+function getTileData(sourceImage) {
+  let counter = 0;
+  const tile = [];
+  // read original image data to be placed into tiles
+  const context = readImageData(sourceImage);
+  const numX = sourceImage.width / TILE_WIDTH;    // jshint ignore:line
+  const numY = sourceImage.height / TILE_HEIGHT;  // jshint ignore:line
+  // getImageData built in pixel data reader function from canvas
+  // returns the RGB
+  const data = context.getImageData(0, 0, numX, numY).data;
+  // for loop adding the hex color into object
+  for(var row = 0; row < numY; row++) {
+    for(var col = 0; col < numX; col++) {
+      // make new tile instance
+      tile.push(new MakeTile(data.subarray(counter * 4, counter * 4 + 3), col, row));
+      counter++;
+    }
   }
+  return tile;
+}
 
-  //reference: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas
-  function getBlob(data) {
-    var svgBlob = new Blob([data], {type: 'image/svg+xml'});
-    return svgBlob;
-  };
+function readImageData(sourceImage) {
+  // divide the image into 16x16px tiles
+  canvas.width = (sourceImage.width / TILE_WIDTH);      // jshint ignore:line
+  canvas.height = (sourceImage.height / TILE_HEIGHT);   // jshint ignore:line
+  // draw the image starting at x,y coordinates of 0,0
+  ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+  return ctx;
+}
 
-  function getUrl(blob) {
-    var url = DOMURL.createObjectURL(blob);
-    return url;
-  };
+// get image meta data and coordinates associated with it
+function MakeTile(imageData, x, y) {
+  this.hex = rgbToHex(imageData);
+  this.x = x * TILE_WIDTH;    // jshint ignore:line
+  this.y = y * TILE_HEIGHT;   // jshint ignore:line
+}
 
-  function revokeUrl(url) {
-    DOMURL.revokeObjectURL(url);
-  };
+function rgbToHex(rgb) {
+  return compToHex(rgb[0]) + compToHex(rgb[1]) + compToHex(rgb[2]);
+}
 
-  function renderTile(ctx, svg, coords) {
-    var image = new Image()
-    var svgBlob = getBlob(svg);
-    var url = getUrl(svgBlob);
-      image.src = url;
-      image.onload = function(){
-        try {
-          ctx.drawImage(image, coords.x, coords.y);
-          ctx.imageSmoothingEnabled = false;
-          ctx.mozImageSmoothingEnabled = false;
-          revokeUrl(url)
-        }
-        catch(error){
-          throw new Error("the image was probably too large, try something around 200px wide");
-        }
+function compToHex(item) {
+  var hex = item.toString(16);
+  return hex.length === 1 ? '0' + hex : hex;
+}
+
+function fetchNextColor(hexArray, positions, finalCanvas, index, arr, count) {
+  let indexCount = index;
+  let i = count;
+  const masterSvg = arr;
+  const finalCtx = finalCanvas.getContext('2d');
+  // refactor (no .catch)
+  hexFetch(hexArray[indexCount])
+  .then((response) => {
+    return response.text();
+  })
+  .then((result) => {
+    masterSvg.push({svg: result, x: positions[i].x, y: positions[i].y});
+    indexCount++;
+    i++;
+    console.log(indexCount, hexArray.length);
+    // refactor (could cause an infinite loop)
+    if (indexCount >= hexArray.length) {
+      renderRows(masterSvg, finalCtx, finalCanvas);
+    } else {
+      fetchNextColor(
+        hexArray, positions, finalCanvas, indexCount, masterSvg, i
+      );
+    }
+  });
+}
+
+function hexFetch(hex){
+  return fetch('/color/' + hex);
+}
+
+function renderRows(arr, ctx, canvas) {
+  arr.forEach(function(data) {
+    renderTile(ctx, data.svg, {x: data.x, y: data.y});
+  });
+}
+
+function renderTile(ctx, svg, coords) {
+  const image = new Image();
+  const svgBlob = getBlob(svg);
+  const url = getUrl(svgBlob);
+    image.src = url;
+    image.onload = function() {
+      try {
+        ctx.drawImage(image, coords.x, coords.y);
+        ctx.imageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        revokeUrl(url);
       }
-    return canvas;
-  };
+      catch(error){
+        throw new Error("Image is too large");
+      }
+    };
+  return canvas;
+}
 
-  //***got the equation for rgb -> hex conversion functions at http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-  function compToHex(item) {
-    var hex = item.toString(16);
-    return hex.length == 1 ? '0' + hex : hex; //look up this syntax
-  };
+function revokeUrl(url) {
+  windowURL.revokeObjectURL(url);
+}
 
-  function rgbToHex(rgb) {
-    return compToHex(rgb[0]) + compToHex(rgb[1]) + compToHex(rgb[2]);
-  };
+function getBlob(data) {
+  const svgBlob = new Blob([data], {type: 'image/svg+xml'});
+  return svgBlob;
+}
 
-  //reference http://stackoverflow.com/questions/34913541/adding-an-uploaded-file-as-an-image-element-in-an-svg
-  function getHttp(svgUrl) {
-    fetch(svgUrl);
-  };
-
-  function run(image) {
-    drawMos(image);
-  };
-
-}); //end doc listen
+function getUrl(blob) {
+  const url = windowURL.createObjectURL(blob);
+  return url;
+}

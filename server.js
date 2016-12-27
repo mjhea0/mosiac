@@ -21,7 +21,7 @@ var svgTemplate = [
 http.createServer(function (req, res) {
   var pathname = url.parse(req.url).pathname;
   var m;
-  if (pathname == '/') {
+  if (pathname === '/') {
     res.writeHead(200, {'Content-Type': 'text/html'});
     fs.createReadStream(dir + '/mosaic.html').pipe(res);
     return;

@@ -7,37 +7,25 @@
     <script type="text/javascript" src="js/client.js"></script>
     <title>Mosaic</title>
   </head>
-
   <body>
-
-    <div class="upload--container">
-
+    <div class="upload-container">
       <h1>mosaic</h1>
-      <section class="small">It may take a while to render larger images.</section>
+      <section class="small">Please upload an image no larger than 250 by 250 pixels.</section>
       <section class="upload">
         <input
           type="file"
-          id="photo--upload"
-          class="photo--upload"
-          name="photo--upload"
+          id="photo-upload"
+          class="photo-upload"
+          name="photo-upload"
           accept="image/x-png, image/gif, image/jpeg"
-          max-size= 250
-          />
+          max-size="250"
+        />
       </section>
       <detail class="warning"></detail>
-
-
     </div>
-
-    <div id="mosaic--container" class="mosaic--container">
-
-      <canvas id="original" class="original">
-      </canvas>
-
-      <canvas id="mosaic" class="mosaic">
-      </canvas>
-
+    <div id="mosaic-container" class="mosaic-container">
+      <canvas id="original" class="original"></canvas>
+      <canvas id="mosaic" class="mosaic"></canvas>
     </div>
-
   </body>
 </html>
