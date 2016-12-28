@@ -10,3 +10,4 @@
 | Improve UX                                        |        |
 | Write tests                                       |        |
 | Convert the function within a loop to a generator |        |
+| Add better error handling                         |        |

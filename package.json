@@ -1,0 +1,6 @@
+{
+  "name": "mosaic",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
