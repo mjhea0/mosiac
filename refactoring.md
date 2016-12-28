@@ -2,7 +2,7 @@
 
 | Step                                              | Commit |
 |---------------------------------------------------|--------|
-| De-couple code                                    |        |
+| De-couple code                                    | [link](https://github.com/mjhea0/mosiac/commit/7094cb97c9e84b4542f07bd977bd6fa9e0f2ec5e)       |
 | Modularize code                                   |        |
 | Ensure each function does only one thing          |        |
 | Ensure each function as a return                  |        |
