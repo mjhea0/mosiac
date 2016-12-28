@@ -2,11 +2,11 @@
 
 | Step                                              | Commit |
 |---------------------------------------------------|--------|
-| De-couple code                                    | [link](https://github.com/mjhea0/mosiac/commit/6b0e7c5e787c5d75ff368ac65b8aa4157e2150c8) |
+| De-couple code                                    |        |
 | Modularize code                                   |        |
 | Ensure each function does only one thing          |        |
 | Ensure each function as a return                  |        |
-| Lint code                                         |        |
+| Lint code                                         | [link](https://github.com/mjhea0/mosiac/commit/6b0e7c5e787c5d75ff368ac65b8aa4157e2150c8)       |
 | Improve UX                                        |        |
 | Write tests                                       |        |
 | Convert the function within a loop to a generator |        |
