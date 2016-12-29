@@ -11,12 +11,16 @@ const windowURL = window.URL || window.webkitURL || window;
 // ** helpers ** //
 
 function handleImageUpload(event) {
-  loadOriginalImage(event);
-  handleImage(event);
+  loadOriginalImage(event, (err, res) => {
+    if (err) console.log(err);
+  });
+  handleImage(event, (err, res) => {
+    if (err) console.log(err);
+    // what could you do here in the case of a success?
+  });
 }
 
-
-function loadOriginalImage(event) {
+function loadOriginalImage(event, callback) {
   const originalCanvasElement = document.getElementById('original');
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -29,43 +33,61 @@ function loadOriginalImage(event) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(event.target.files[0]);
-  return true;
+  callback(null, true);
 }
 
-function handleImage(event) {
-    const reader = new FileReader();
-    reader.onload = (e)=> {
-      const sourceImage = new Image();
-      // once the image loads
-      sourceImage.onload = () => {
+function handleImage(event, callback) {
+  const reader = new FileReader();
+  reader.onload = (e)=> {
+    const sourceImage = new Image();
+    sourceImage.onload = () => {
       canvas.width = sourceImage.width;
       canvas.height = sourceImage.height;
-      // call all worker funcitons
-      drawMosiac(sourceImage);
+      const finalCanvas = createNewCanvas(sourceImage);
+      const chunkInfo = getChunkInfo(sourceImage);
+      console.log(chunkInfo);
+      drawMosiac(finalCanvas, chunkInfo);
     };
     sourceImage.src = e.target.result;
   };
   reader.readAsDataURL(event.target.files[0]);
+  callback(null, true);
 }
 
-function drawMosiac(image) {
-  const finalCanvas = document.getElementById('mosaic');
-  finalCanvas.width = image.width;
-  finalCanvas.height = image.height;
-  const hexArray = [];
-  const positions = [];
-  const allSvg = [];
-  // each chunk equalls 16x16px squares
+function createNewCanvas(image) {
+  const canvas = document.getElementById('mosaic');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  return canvas;
+}
+
+function getChunkInfo(image) {
+  // each chunks are 16x16px squares
   const chunkSize = image.width / TILE_WIDTH; // jshint ignore:line
   const tileData = getTileData(image);
-  //split tiles into 16x16 chunks
-  let chunk = tileData.splice(0, chunkSize);
+  return {
+    chunkSize: chunkSize,
+    tileData: tileData
+  };
+}
+
+function createChunk(data, size) {
+  return data.splice(0, size);
+}
+
+function drawMosiac(finalCanvas, chunkInfo) {
+  const hexArray = [];
+  const positions = [];
+  const chunkSize = chunkInfo.chunkSize;
+  const tileData = chunkInfo.tileData;
+  // split tiles into a 16x16 chunk
+  let chunk = createChunk(tileData, chunkSize);
   // while chunks exist break it into arrays of data
   while(chunk.length !== 0) {
     for(let i = 0; i< chunk.length; i++){
       // refactor into a generator
       chunk.map((data) => {
-        //returns single svg
+        // returns single svg
         const hex = data.hex;
         const posX = data.x;
         const posY = data.y;
@@ -74,7 +96,7 @@ function drawMosiac(image) {
       });
     }
     // re-allocate to next chunk
-    chunk = tileData.splice(0, chunkSize);
+    chunk = createChunk(tileData, chunkSize);
   }
   fetchNextColor(hexArray, positions, finalCanvas, 0, [], 0);
 }
