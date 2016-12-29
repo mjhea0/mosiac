@@ -1,12 +1,11 @@
 'use strict';
 
-
 // ** globals ** //
+
 const sourceImage = new Image();
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const windowURL = window.URL || window.webkitURL || window;
-
 
 // ** helpers ** //
 
@@ -82,8 +81,8 @@ function drawMosiac(chunkInfo) {
   let chunk = createChunk(tileData, chunkSize);
   // while chunks exist break it up into arrays of data
   while(chunk.length !== 0) {
+    // refactor into a generator
     for(let i = 0; i< chunk.length; i++){
-      // refactor into a generator
       chunk.map((data) => {
         const hex = data.hex;
         const posX = data.x;
@@ -112,15 +111,25 @@ function getTileData(sourceImage) {
   // getImageData built in pixel data reader function from canvas
   // returns the RGB
   const data = context.getImageData(0, 0, numX, numY).data;
-  // for loop adding the hex color into object
+  // add the hex color into object
   for(var row = 0; row < numY; row++) {
     for(var col = 0; col < numX; col++) {
       // make new tile instance
-      tile.push(new MakeTile(data.subarray(counter * 4, counter * 4 + 3), col, row));
+      const newTile = createTile(
+        data.subarray(counter * 4, counter * 4 + 3), col, row);
+      tile.push(newTile);
       counter++;
     }
   }
   return tile;
+}
+
+// get image meta data and coordinates associated with it
+function createTile(imageData, x, y) {
+  const hex = rgbToHex(imageData);
+  hex.x = x * TILE_WIDTH;    // jshint ignore:line
+  hex.y = y * TILE_HEIGHT;   // jshint ignore:line
+  return hex;
 }
 
 function readImageData(sourceImage) {
@@ -132,22 +141,16 @@ function readImageData(sourceImage) {
   return ctx;
 }
 
-// get image meta data and coordinates associated with it
-function MakeTile(imageData, x, y) {
-  this.hex = rgbToHex(imageData);
-  this.x = x * TILE_WIDTH;    // jshint ignore:line
-  this.y = y * TILE_HEIGHT;   // jshint ignore:line
-}
-
 function rgbToHex(rgb) {
   return compToHex(rgb[0]) + compToHex(rgb[1]) + compToHex(rgb[2]);
 }
 
 function compToHex(item) {
-  var hex = item.toString(16);
+  let hex = item.toString(16);
   return hex.length === 1 ? '0' + hex : hex;
 }
 
+// refactor - too much happening here!
 function createTileColor(positions, hexArray, finalCanvas, index, arr, count) {
   let indexCount = index;
   let i = count;
@@ -162,7 +165,6 @@ function createTileColor(positions, hexArray, finalCanvas, index, arr, count) {
     masterSvg.push({svg: result, x: positions[i].x, y: positions[i].y});
     indexCount++;
     i++;
-    // console.log(indexCount, hexArray.length);
     // refactor (could cause an infinite loop)
     if (indexCount >= hexArray.length) {
       renderRows(masterSvg, finalCtx, finalCanvas);
@@ -194,17 +196,13 @@ function renderTile(ctx, svg, coords) {
         ctx.drawImage(image, coords.x, coords.y);
         ctx.imageSmoothingEnabled = false;
         ctx.mozImageSmoothingEnabled = false;
-        revokeUrl(url);
+        windowURL.revokeObjectURL(url);
       }
       catch(error){
         throw new Error("Image is too large");
       }
     };
   return canvas;
-}
-
-function revokeUrl(url) {
-  windowURL.revokeObjectURL(url);
 }
 
 function getBlob(data) {
