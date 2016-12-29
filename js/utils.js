@@ -126,10 +126,11 @@ function getTileData(sourceImage) {
 
 // get image meta data and coordinates associated with it
 function createTile(imageData, x, y) {
-  const hex = rgbToHex(imageData);
-  hex.x = x * TILE_WIDTH;    // jshint ignore:line
-  hex.y = y * TILE_HEIGHT;   // jshint ignore:line
-  return hex;
+  return {
+    hex: rgbToHex(imageData),
+    x: x * TILE_WIDTH,          // jshint ignore:line
+    y: y * TILE_HEIGHT          // jshint ignore:line    
+  };
 }
 
 function readImageData(sourceImage) {
