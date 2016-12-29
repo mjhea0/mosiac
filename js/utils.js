@@ -45,8 +45,9 @@ function handleImage(event, callback) {
       canvas.height = sourceImage.height;
       const finalCanvas = createNewCanvas(sourceImage);
       const chunkInfo = getChunkInfo(sourceImage);
-      console.log(chunkInfo);
-      drawMosiac(finalCanvas, chunkInfo);
+      const tileInfo = drawMosiac(chunkInfo);
+      createTileColor(
+        tileInfo.positions, tileInfo.hexArray, finalCanvas, 0, [], 0);
     };
     sourceImage.src = e.target.result;
   };
@@ -65,29 +66,25 @@ function getChunkInfo(image) {
   // each chunks are 16x16px squares
   const chunkSize = image.width / TILE_WIDTH; // jshint ignore:line
   const tileData = getTileData(image);
-  return {
-    chunkSize: chunkSize,
-    tileData: tileData
-  };
+  return { chunkSize, tileData };
 }
 
 function createChunk(data, size) {
   return data.splice(0, size);
 }
 
-function drawMosiac(finalCanvas, chunkInfo) {
+function drawMosiac(chunkInfo) {
   const hexArray = [];
   const positions = [];
   const chunkSize = chunkInfo.chunkSize;
   const tileData = chunkInfo.tileData;
   // split tiles into a 16x16 chunk
   let chunk = createChunk(tileData, chunkSize);
-  // while chunks exist break it into arrays of data
+  // while chunks exist break it up into arrays of data
   while(chunk.length !== 0) {
     for(let i = 0; i< chunk.length; i++){
       // refactor into a generator
       chunk.map((data) => {
-        // returns single svg
         const hex = data.hex;
         const posX = data.x;
         const posY = data.y;
@@ -98,7 +95,10 @@ function drawMosiac(finalCanvas, chunkInfo) {
     // re-allocate to next chunk
     chunk = createChunk(tileData, chunkSize);
   }
-  fetchNextColor(hexArray, positions, finalCanvas, 0, [], 0);
+  return {
+    hexArray,
+    positions,
+  };
 }
 
 // get initial data for tiles
@@ -148,7 +148,7 @@ function compToHex(item) {
   return hex.length === 1 ? '0' + hex : hex;
 }
 
-function fetchNextColor(hexArray, positions, finalCanvas, index, arr, count) {
+function createTileColor(positions, hexArray, finalCanvas, index, arr, count) {
   let indexCount = index;
   let i = count;
   const masterSvg = arr;
@@ -162,19 +162,19 @@ function fetchNextColor(hexArray, positions, finalCanvas, index, arr, count) {
     masterSvg.push({svg: result, x: positions[i].x, y: positions[i].y});
     indexCount++;
     i++;
-    console.log(indexCount, hexArray.length);
+    // console.log(indexCount, hexArray.length);
     // refactor (could cause an infinite loop)
     if (indexCount >= hexArray.length) {
       renderRows(masterSvg, finalCtx, finalCanvas);
     } else {
-      fetchNextColor(
-        hexArray, positions, finalCanvas, indexCount, masterSvg, i
+      createTileColor(
+        positions, hexArray, finalCanvas, indexCount, masterSvg, i
       );
     }
   });
 }
 
-function hexFetch(hex){
+function hexFetch(hex) {
   return fetch('/color/' + hex);
 }
 
