@@ -1,6 +1,7 @@
 {
   "name": "mosaic",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "open js/tests/index.html"
   }
 }
