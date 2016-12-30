@@ -43,8 +43,10 @@ function handleImage(event, callback) {
       canvas.width = sourceImage.width;
       canvas.height = sourceImage.height;
       const finalCanvas = createNewCanvas(sourceImage);
-      const chunkInfo = getChunkInfo(sourceImage);
-      const tileInfo = drawMosiac(chunkInfo);
+      // each chunks are 16x16px squares
+      const chunkSize = sourceImage.width / TILE_WIDTH; // jshint ignore:line
+      const tileData = getTileData(sourceImage);
+      const tileInfo = drawMosiac(chunkSize, tileData);
       createTileColor(
         tileInfo.positions, tileInfo.hexArray, finalCanvas, 0, [], 0);
     };
@@ -61,22 +63,13 @@ function createNewCanvas(image) {
   return canvas;
 }
 
-function getChunkInfo(image) {
-  // each chunks are 16x16px squares
-  const chunkSize = image.width / TILE_WIDTH; // jshint ignore:line
-  const tileData = getTileData(image);
-  return { chunkSize, tileData };
-}
-
 function createChunk(data, size) {
   return data.splice(0, size);
 }
 
-function drawMosiac(chunkInfo) {
+function drawMosiac(chunkSize, tileData) {
   const hexArray = [];
   const positions = [];
-  const chunkSize = chunkInfo.chunkSize;
-  const tileData = chunkInfo.tileData;
   // split tiles into a 16x16 chunk
   let chunk = createChunk(tileData, chunkSize);
   // while chunks exist break it up into arrays of data
@@ -129,7 +122,7 @@ function createTile(imageData, x, y) {
   return {
     hex: rgbToHex(imageData),
     x: x * TILE_WIDTH,          // jshint ignore:line
-    y: y * TILE_HEIGHT          // jshint ignore:line    
+    y: y * TILE_HEIGHT          // jshint ignore:line
   };
 }
 
