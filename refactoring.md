@@ -9,5 +9,5 @@
 | Lint code                                         | [1](https://github.com/mjhea0/mosiac/commit/6b0e7c5e787c5d75ff368ac65b8aa4157e2150c8)       |
 | Improve UX                                        |        |
 | Write tests                                       |        |
-| Convert the function within a loop to a generator |        |
+| Convert the function within a loop to a generator | [1](https://github.com/mjhea0/mosiac/commit/077ed85c08ec64e60a9a76d9b801460825fd6469)       |
 | Add better error handling                         |        |

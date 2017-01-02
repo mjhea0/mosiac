@@ -2,55 +2,45 @@
 
 // ** globals ** //
 
-const sourceImage = new Image();
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
+const newCanvasElement = document.createElement('canvas');
+const originalCanvasElement = document.getElementById('original');
+const ctx = newCanvasElement.getContext('2d');
 const windowURL = window.URL || window.webkitURL || window;
 
 // ** helpers ** //
 
 function handleImageUpload(event) {
-  loadOriginalImage(event, (err, res) => {
+  loadImage(event, false, (err, res) => {
     if (err) console.log(err);
   });
-  handleImage(event, (err, res) => {
+  loadImage(event, true, (err, res) => {
     if (err) console.log(err);
     // what could you do here in the case of a success?
   });
 }
 
-function loadOriginalImage(event, callback) {
-  const originalCanvasElement = document.getElementById('original');
+function loadImage(event, newImage, callback) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = function() {
-      originalCanvasElement.width = img.width;
-      originalCanvasElement.height = img.height;
-      originalCanvasElement.getContext('2d').drawImage(img, 0, 0);
+      if (newImage) {
+        newCanvasElement.width = img.width;
+        newCanvasElement.height = img.height;
+        const finalCanvas = createNewCanvas(img);
+        // each chunks are 16x16px squares
+        const chunkSize = img.width / TILE_WIDTH; // jshint ignore:line
+        const tileData = getTileData(img);
+        const tileInfo = drawMosiac(chunkSize, tileData);
+        createTileColor(
+          tileInfo.positions, tileInfo.hexArray, finalCanvas, 0, [], 0);
+      } else {
+        originalCanvasElement.width = img.width;
+        originalCanvasElement.height = img.height;
+        originalCanvasElement.getContext('2d').drawImage(img, 0, 0);
+      }
     };
     img.src = e.target.result;
-  };
-  reader.readAsDataURL(event.target.files[0]);
-  callback(null, true);
-}
-
-function handleImage(event, callback) {
-  const reader = new FileReader();
-  reader.onload = (e)=> {
-    const sourceImage = new Image();
-    sourceImage.onload = () => {
-      canvas.width = sourceImage.width;
-      canvas.height = sourceImage.height;
-      const finalCanvas = createNewCanvas(sourceImage);
-      // each chunks are 16x16px squares
-      const chunkSize = sourceImage.width / TILE_WIDTH; // jshint ignore:line
-      const tileData = getTileData(sourceImage);
-      const tileInfo = drawMosiac(chunkSize, tileData);
-      createTileColor(
-        tileInfo.positions, tileInfo.hexArray, finalCanvas, 0, [], 0);
-    };
-    sourceImage.src = e.target.result;
   };
   reader.readAsDataURL(event.target.files[0]);
   callback(null, true);
@@ -121,10 +111,11 @@ function createTile(imageData, x, y) {
 
 function readImageData(sourceImage) {
   // divide the image into 16x16px tiles
-  canvas.width = (sourceImage.width / TILE_WIDTH);      // jshint ignore:line
-  canvas.height = (sourceImage.height / TILE_HEIGHT);   // jshint ignore:line
+  newCanvasElement.width = (sourceImage.width / TILE_WIDTH);      // jshint ignore:line
+  newCanvasElement.height = (sourceImage.height / TILE_HEIGHT);   // jshint ignore:line
   // draw the image starting at x,y coordinates of 0,0
-  ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(
+    sourceImage, 0, 0, newCanvasElement.width, newCanvasElement.height);
   return ctx;
 }
 
@@ -189,7 +180,7 @@ function renderTile(ctx, svg, coords) {
         throw new Error("Image is too large");
       }
     };
-  return canvas;
+  return newCanvasElement;
 }
 
 function getBlob(data) {
