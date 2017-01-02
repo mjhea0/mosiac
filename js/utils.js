@@ -74,17 +74,10 @@ function drawMosiac(chunkSize, tileData) {
   let chunk = createChunk(tileData, chunkSize);
   // while chunks exist break it up into arrays of data
   while(chunk.length !== 0) {
-    // refactor into a generator
-    for(let i = 0; i< chunk.length; i++){
-      chunk.map((data) => {
-        const hex = data.hex;
-        const posX = data.x;
-        const posY = data.y;
-        hexArray.push(hex);
-        positions.push({x: posX, y: posY});
-      });
+    var gen = chunkGen(chunk, hexArray, positions);
+    for(var i = 0; i< chunk.length; i++){
+      gen.next(chunk, hexArray, positions);
     }
-    // re-allocate to next chunk
     chunk = createChunk(tileData, chunkSize);
   }
   return {
@@ -207,4 +200,20 @@ function getBlob(data) {
 function getUrl(blob) {
   const url = windowURL.createObjectURL(blob);
   return url;
+}
+
+// generator to iterate over mapping data
+function* chunkGen(chunk, hexArray, positions){
+  yield chunkMap(chunk, hexArray, positions);
+}
+
+//map over chunk data - this and the generator allow for faster rendering, and larger image handling
+function chunkMap(chunk, hexArray, positions){
+  chunk.map(function(data) {
+    var hex = data.hex;
+    var posX = data.x;
+    var posY = data.y;
+    hexArray.push(hex);
+    positions.push({ x: posX, y: posY });
+  });
 }
