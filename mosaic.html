@@ -3,10 +3,12 @@
   <head>
     <!-- stylesheet  -->
     <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/spinner.css">
     <title>Mosaic</title>
   </head>
   <body>
-    <div class="upload-container">
+    <br>
+    <div class="upload-container" id="upload-container">
       <h1>mosaic</h1>
       <section class="small">Please upload an image no larger than 250 by 250 pixels.</section>
       <section class="upload">
@@ -21,6 +23,7 @@
       </section>
       <detail class="warning"></detail>
     </div>
+    <div class="loader" id="loader">Loading...</div>
     <div id="mosaic-container" class="mosaic-container">
       <canvas id="original" class="original"></canvas>
       <canvas id="mosaic" class="mosaic"></canvas>

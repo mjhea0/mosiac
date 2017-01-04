@@ -36,19 +36,3 @@ input {
   align-items: center;
   margin-bottom: 5%;
 }
-
-.mosaic {
-  position: relative;
-  float: left;
-  height: auto;
-  margin: 0 0 0 5%;
-  padding: 1%;
-}
-
-.original {
-  position: relative;
-  float: left;
-  height: auto;
-  margin: 0 5% 0 0;
-  padding: 1%;
-}

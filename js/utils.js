@@ -10,12 +10,12 @@ const windowURL = window.URL || window.webkitURL || window;
 // ** helpers ** //
 
 function handleImageUpload(event) {
+  document.getElementById('loader').style.visibility = 'visible';
   loadImage(event, false, (err, res) => {
     if (err) console.log(err);
   });
   loadImage(event, true, (err, res) => {
     if (err) console.log(err);
-    // what could you do here in the case of a success?
   });
 }
 
@@ -146,6 +146,8 @@ function createTileColor(positions, hexArray, finalCanvas, index, arr, count) {
     // refactor (could cause an infinite loop)
     if (indexCount >= hexArray.length) {
       renderRows(masterSvg, finalCtx, finalCanvas);
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('upload-container').style.display = 'none';
     } else {
       createTileColor(
         positions, hexArray, finalCanvas, indexCount, masterSvg, i
