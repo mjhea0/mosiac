@@ -8,7 +8,7 @@
 | Ensure each function does only one thing          | [1](https://github.com/mjhea0/mosiac/commit/3460098ac220eb50dedd414baf780891e0abcbb2)          |
 | Ensure each function returns something            | [1](https://github.com/mjhea0/mosiac/commit/3460098ac220eb50dedd414baf780891e0abcbb2)          |
 | Lint code                                         | [1](https://github.com/mjhea0/mosiac/commit/6b0e7c5e787c5d75ff368ac65b8aa4157e2150c8)       |
-| Improve UX                                        |        |
+| Improve UI/UX                                        | [1](https://github.com/mjhea0/mosiac/commit/1d4dd2827a640cc84c0044a25bbb9b836ac82ae5)       |
 | Write tests                                       |        |
 | Convert the function within a loop to a generator | [1](https://github.com/mjhea0/mosiac/commit/077ed85c08ec64e60a9a76d9b801460825fd6469)       |
 | Add better error handling                         |        |
